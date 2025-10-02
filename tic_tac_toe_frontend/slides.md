@@ -87,7 +87,20 @@ const statusText = computed(() => {
 
     <div class="status-row">
       <div class="status-pill" :data-state="winner ? 'win' : (isDraw ? 'draw' : 'turn')">
-        {{ statusText }}
+        <!-- Replace status text to show icons while keeping computed logic intact -->
+        <template v-if="winner">
+          Winner:
+          <span v-if="winner === 'X'" class="piece knight piece-inline">♞</span>
+          <span v-else class="piece queen piece-inline">♛</span>
+        </template>
+        <template v-else-if="isDraw">
+          Draw game
+        </template>
+        <template v-else>
+          Turn:
+          <span v-if="currentPlayer === 'X'" class="piece knight piece-inline">♞</span>
+          <span v-else class="piece queen piece-inline">♛</span>
+        </template>
       </div>
     </div>
 
@@ -100,14 +113,26 @@ const statusText = computed(() => {
         @click="handleCellClick(idx)"
         :aria-label="`Cell ${idx+1}`"
       >
-        <span v-if="cell" class="mark">{{ cell }}</span>
+        <span v-if="cell" class="mark" :class="{'is-piece': true}">
+          <template v-if="cell === 'X'">
+            <!-- Chess Knight for X -->
+            <span class="piece knight" aria-hidden="true">♞</span>
+            <span class="sr-only">Knight</span>
+          </template>
+          <template v-else>
+            <!-- Chess Queen for O -->
+            <span class="piece queen" aria-hidden="true">♛</span>
+            <span class="sr-only">Queen</span>
+          </template>
+        </span>
       </button>
     </div>
 
     <div class="actions">
       <button class="btn-primary" @click="resetGame">New Game</button>
       <div class="legend">
-        <span class="badge x">X</span> goes first • <span class="badge o">O</span> follows
+        <span class="badge x"><span class="piece knight">♞</span></span> goes first •
+        <span class="badge o"><span class="piece queen">♛</span></span> follows
       </div>
     </div>
   </div>
@@ -229,15 +254,45 @@ const statusText = computed(() => {
 
 /* Marks */
 .mark {
-  font-size: clamp(34px, 8.2vw, 84px);
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
-.cell-x .mark {
+
+/* Accessible SR-only text for icon labels */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap; /* added to prevent the text from wrapping */
+  border: 0;
+}
+
+/* Chess piece styling */
+.piece {
+  font-size: clamp(34px, 8.2vw, 84px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  transform: translateZ(0); /* enable GPU hint for smoother hover */
+}
+.piece-inline {
+  font-size: clamp(18px, 2.8vw, 28px);
+  vertical-align: middle;
+}
+
+/* Colors mapped to original player accent colors */
+.cell-x .piece,
+.piece.knight {
   color: var(--op-primary);
   text-shadow: 0 6px 22px rgba(37,99,235,0.25);
 }
-.cell-o .mark {
+.cell-o .piece,
+.piece.queen {
   color: var(--op-amber);
   text-shadow: 0 6px 22px rgba(245,158,11,0.25);
 }
